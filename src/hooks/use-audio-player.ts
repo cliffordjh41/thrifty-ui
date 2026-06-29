@@ -45,8 +45,8 @@ let visibilityHandler: (() => void) | null = null
 // for a band-bar visualizer and slashes work for every subscriber.
 const FRAME_INTERVAL_MS = 1000 / 30
 // All currently-mounted consumers' onEnded callbacks. The audio element
-// is a singleton but multiple panels can mount against it (e.g. cliffordjh
-// mounts MusicPlayerPanel in both the desktop drawer and the mobile sheet);
+// is a singleton but multiple panels can mount against it (e.g. a host
+// mounting MusicPlayerPanel in both a desktop drawer and a mobile sheet);
 // each needs its own track-advance side-effect to fire, not just the last
 // one to register.
 const endedCallbacks = new Set<() => void>()

@@ -5,8 +5,8 @@
 // real surfaces at once. Drawers (Typography, Effects) and the B color variant
 // are opened and audited separately since they aren't in the default view.
 //
-//   1. Studio dev server:  (in apps/studio)  pnpm dev      # http://localhost:5173
-//   2. This sweep:         (in thrifty)      URL=http://localhost:5173 node scripts/a11y-sweep.mjs
+//   1. Studio dev server:  (in the studio app)  pnpm dev   # http://localhost:5173
+//   2. This sweep:         (in the kit)  URL=http://localhost:5173 node scripts/a11y-sweep.mjs
 //
 // Rewritten 2026-06-25 for the minimal kit (the old 17-panel carousel was
 // removed in the cull; this targets the current Studio composition).

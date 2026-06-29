@@ -1,4 +1,4 @@
-import { Fragment, type ComponentType } from "react"
+import type { ComponentType } from "react"
 import {
   RotateCw,
   ArrowRightLeft,
@@ -9,19 +9,21 @@ import {
   ArrowLeftFromLine,
   EyeOff,
   ArrowRightFromLine,
-  ArrowLeft,
-  ArrowRight,
-  Box,
-  Sparkles,
-  Type,
-  Palette,
 } from "lucide-react"
 import { cx } from "../../lib/utils"
 import { COLUMN_WIDTH as SIDEBAR_WIDTH } from "./slidable-column"
-import { VisuallyHidden } from "./visually-hidden"
+import { useRovingTabindex } from "../../hooks/use-roving-tabindex"
+
+// Desktop column-position controls for a pair of SlidableColumns: reset / swap /
+// flip, align left / center / right, hide left / both / right.
+//
+// This is a real APG Toolbar (https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/):
+// role="toolbar" + an accessible label, one tab stop into the group, and arrow /
+// Home / End roving among the controls (via useRovingTabindex). It does ONE
+// thing — it does not know about mobile. A mobile bottom bar is a different
+// surface; compose a `BottomBar` in the host and choose per breakpoint there.
 
 interface ColumnToolBarProps {
-  isMobile: boolean
   leftOffset: number
   rightOffset: number
   setLeftOffset: (offset: number) => void
@@ -32,13 +34,8 @@ interface ColumnToolBarProps {
   setLeftHidden: (hidden: boolean) => void
   rightHidden: boolean
   setRightHidden: (hidden: boolean) => void
-  activeMobileSheet?: "left" | "right" | "left-footer" | "right-footer" | null
-  onLeftClick?: () => void
-  onRightClick?: () => void
-  onLeftFooterClick?: () => void
-  onRightFooterClick?: () => void
-  onPrevPanelClick?: () => void
-  onNextPanelClick?: () => void
+  /** Accessible name for the toolbar. Defaults to "Column controls". */
+  label?: string
 }
 
 const btnBase = "flex items-center justify-center p-1.5 transition-colors"
@@ -47,9 +44,15 @@ function btnClass(active = false) {
   return cx(btnBase, active ? "bg-mute text-foreground" : "text-mute-fg hover:text-foreground hover:bg-mute/50")
 }
 
+interface ToolbarItem {
+  title: string
+  Icon: ComponentType<{ className?: string }>
+  onClick: () => void
+  active?: boolean
+  toggle?: boolean
+}
 
 export function ColumnToolBar({
-  isMobile,
   leftOffset,
   rightOffset,
   setLeftOffset,
@@ -60,13 +63,7 @@ export function ColumnToolBar({
   setLeftHidden,
   rightHidden,
   setRightHidden,
-  activeMobileSheet,
-  onLeftClick,
-  onRightClick,
-  onLeftFooterClick,
-  onRightFooterClick,
-  onPrevPanelClick,
-  onNextPanelClick,
+  label = "Column controls",
 }: ColumnToolBarProps) {
   const reset = () => {
     setLeftOffset(0)
@@ -97,11 +94,9 @@ export function ColumnToolBar({
     setSwapped(!swapped)
   }
 
-  // Alignment functions always use natural-side math (left column on
-  // viewport left, right column on viewport right). If the user has
-  // dragged columns into a crossed-over position, alignment restores
-  // them to natural sides at the requested alignment.
-
+  // Alignment always uses natural-side math (left column on viewport left, right
+  // on viewport right). If columns were dragged into a crossed-over position,
+  // alignment restores them to natural sides at the requested alignment.
   const alignLeft = () => {
     const vw = window.innerWidth
     setLeftOffset(0)
@@ -120,120 +115,95 @@ export function ColumnToolBar({
     setRightOffset(0)
   }
 
-  if (isMobile) {
-    // Layout convention: 6 fixed slots, semantically labelled per the
-    // studio sheets they open, in left-to-right order:
-    //   [Style] [Typography] [prev] [next] [Effects] [Color]
-    // Slot ordering reflects the desired bar reading order; each slot
-    // points at the mobile-sheet identifier its panel lives in
-    // (Typography lives in "left-footer", Effects in "right-footer"
-    // per studio's App.tsx). Prev/Next drive the studio's
-    // preview-carousel position.
-    type Item = { label: string; icon: ComponentType<{ className?: string }> | null; active?: boolean; onClick?: () => void }
-    const items: Item[] = [
-      { label: "Style", icon: Box, active: activeMobileSheet === "left", onClick: onLeftClick },
-      { label: "Typography", icon: Type, active: activeMobileSheet === "left-footer", onClick: onLeftFooterClick },
-      { label: "Prev", icon: ArrowLeft, onClick: onPrevPanelClick },
-      { label: "Next", icon: ArrowRight, onClick: onNextPanelClick },
-      { label: "Effects", icon: Sparkles, active: activeMobileSheet === "right-footer", onClick: onRightFooterClick },
-      { label: "Color", icon: Palette, active: activeMobileSheet === "right", onClick: onRightClick },
-    ]
+  // Flat control order = arrow-key roving order. Grouped visually below.
+  const items: ToolbarItem[] = [
+    { title: "Reset positions", Icon: RotateCw, onClick: reset },
+    { title: "Swap sidebars", Icon: ArrowRightLeft, onClick: swap },
+    { title: "Flip sidebars", Icon: ArrowLeftRight, onClick: flip },
+    { title: "Align left", Icon: PanelLeftClose, onClick: alignLeft },
+    { title: "Center", Icon: Columns2, onClick: alignCenter },
+    { title: "Align right", Icon: PanelRightClose, onClick: alignRight },
+    {
+      title: leftHidden ? "Show left" : "Hide left",
+      Icon: ArrowLeftFromLine,
+      onClick: () => setLeftHidden(!leftHidden),
+      active: leftHidden,
+      toggle: true,
+    },
+    {
+      title: leftHidden && rightHidden ? "Show both" : "Hide both",
+      Icon: EyeOff,
+      onClick: () => {
+        const bothHidden = leftHidden && rightHidden
+        setLeftHidden(!bothHidden)
+        setRightHidden(!bothHidden)
+      },
+      active: leftHidden && rightHidden,
+      toggle: true,
+    },
+    {
+      title: rightHidden ? "Show right" : "Hide right",
+      Icon: ArrowRightFromLine,
+      onClick: () => setRightHidden(!rightHidden),
+      active: rightHidden,
+      toggle: true,
+    },
+  ]
 
+  const roving = useRovingTabindex({
+    itemCount: items.length,
+    orientation: "horizontal",
+    loop: true,
+  })
+
+  const renderBtn = (i: number) => {
+    const item = items[i]
+    const { Icon } = item
     return (
-      <div data-mobile-bar className="absolute bottom-0 left-0 right-0 h-12 bg-background border-t border-line flex items-stretch z-[60]">
-        {items.map((item, i) => {
-          const Icon = item.icon
-          return (
-            <Fragment key={item.label}>
-              {i > 0 && <div className="w-px self-center h-5 bg-line flex-shrink-0" />}
-              {Icon ? (
-                <button
-                  className={cx(
-                    "flex-1 flex items-center justify-center transition-colors",
-                    item.active
-                      ? "bg-mute text-foreground"
-                      : "text-mute-fg hover:text-foreground hover:bg-mute/50"
-                  )}
-                  onClick={item.onClick}
-                  title={item.label}
-                >
-                  <Icon className="h-4 w-4" />
-                  <VisuallyHidden>{item.label}</VisuallyHidden>
-                </button>
-              ) : (
-                <div className="flex-1" aria-hidden="true" />
-              )}
-            </Fragment>
-          )
-        })}
-      </div>
+      <button
+        {...roving.getItemProps(i)}
+        type="button"
+        onClick={item.onClick}
+        title={item.title}
+        aria-label={item.title}
+        aria-pressed={item.toggle ? item.active : undefined}
+        className={btnClass(item.active)}
+      >
+        <Icon className="h-3.5 w-3.5" />
+      </button>
     )
   }
 
+  const Sep = () => <div role="separator" aria-orientation="vertical" className="w-px bg-line" />
+
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-8 bg-background border-t border-line flex items-center justify-center z-30">
+    <div
+      role="toolbar"
+      aria-label={label}
+      className="absolute bottom-0 left-0 right-0 h-8 bg-background border-t border-line flex items-center justify-center z-30"
+    >
       <div className="flex h-7 gap-3">
-        {/* Reset / Swap / Flip */}
         <div className="flex">
-          <button className={btnClass()} title="Reset positions" onClick={reset}>
-            <RotateCw className="h-3.5 w-3.5" />
-          </button>
-          <div className="w-px bg-line" />
-          <button className={btnClass()} title="Swap sidebars" onClick={swap}>
-            <ArrowRightLeft className="h-3.5 w-3.5" />
-          </button>
-          <div className="w-px bg-line" />
-          <button className={btnClass()} title="Flip sidebars" onClick={flip}>
-            <ArrowLeftRight className="h-3.5 w-3.5" />
-          </button>
+          {renderBtn(0)}
+          <Sep />
+          {renderBtn(1)}
+          <Sep />
+          {renderBtn(2)}
         </div>
-
-        {/* Align Left / Center / Right */}
         <div className="flex">
-          <button className={btnClass()} title="Align left" onClick={alignLeft}>
-            <PanelLeftClose className="h-3.5 w-3.5" />
-          </button>
-          <div className="w-px bg-line" />
-          <button className={btnClass()} title="Center" onClick={alignCenter}>
-            <Columns2 className="h-3.5 w-3.5" />
-          </button>
-          <div className="w-px bg-line" />
-          <button className={btnClass()} title="Align right" onClick={alignRight}>
-            <PanelRightClose className="h-3.5 w-3.5" />
-          </button>
+          {renderBtn(3)}
+          <Sep />
+          {renderBtn(4)}
+          <Sep />
+          {renderBtn(5)}
         </div>
-
-        {/* Hide L / Hide Both / Hide R */}
         <div className="flex">
-          <button
-            className={btnClass(leftHidden)}
-            title={leftHidden ? "Show left" : "Hide left"}
-            onClick={() => setLeftHidden(!leftHidden)}
-          >
-            <ArrowLeftFromLine className="h-3.5 w-3.5" />
-          </button>
-          <div className="w-px bg-line" />
-          <button
-            className={btnClass(leftHidden && rightHidden)}
-            title={leftHidden && rightHidden ? "Show both" : "Hide both"}
-            onClick={() => {
-              const bothHidden = leftHidden && rightHidden
-              setLeftHidden(!bothHidden)
-              setRightHidden(!bothHidden)
-            }}
-          >
-            <EyeOff className="h-3.5 w-3.5" />
-          </button>
-          <div className="w-px bg-line" />
-          <button
-            className={btnClass(rightHidden)}
-            title={rightHidden ? "Show right" : "Hide right"}
-            onClick={() => setRightHidden(!rightHidden)}
-          >
-            <ArrowRightFromLine className="h-3.5 w-3.5" />
-          </button>
+          {renderBtn(6)}
+          <Sep />
+          {renderBtn(7)}
+          <Sep />
+          {renderBtn(8)}
         </div>
-
       </div>
     </div>
   )

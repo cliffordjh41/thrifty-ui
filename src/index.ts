@@ -256,6 +256,8 @@ export {
 } from "./components/ui/column"
 export type { ColumnProps } from "./components/ui/column"
 export { ColumnToolBar } from "./components/ui/tool-bar"
+export { BottomBar } from "./components/ui/bottom-bar"
+export type { BottomBarItem } from "./components/ui/bottom-bar"
 export { ThemeModeToggle } from "./components/ui/theme-mode-toggle"
 export type { ThemeModeToggleProps } from "./components/ui/theme-mode-toggle"
 export {
@@ -291,10 +293,8 @@ export {
 
 // ── Panels ────────────────────────────────────────────────────
 
-// MusicPlayer is the lone showcase example panel kept in the published kit.
-// The other 17 panels were archived 2026-06-23 to
-// `.archive/panels-cull-2026-06-23/` (5 relocated into the cliffordjh site,
-// 12 retired) — the kit ships primitives + shell, not a panel catalog.
+// MusicPlayer is the lone showcase example panel kept in the published kit —
+// the kit ships primitives + shell, not a panel catalog.
 export { MusicPlayerPanel } from "./components/panels/MusicPlayerPanel"
 
 // Theming panels — the studio's design-tool surface, extracted into the kit
@@ -315,11 +315,8 @@ export { useIsMobile } from "./hooks/use-mobile"
 export { useAudioPlayer, subscribeFrequency } from "./hooks/use-audio-player"
 export { useChat } from "./hooks/use-chat"
 export type { Message } from "./hooks/use-chat"
-export { useLinks } from "./hooks/use-links"
-export { useNotes } from "./hooks/use-notes"
 export { usePlaylist } from "./hooks/use-playlist"
 export { useResizable } from "./hooks/use-resizable"
-export { useResume } from "./hooks/use-resume"
 export { useSortable } from "./hooks/use-sortable"
 export { useSwipeDismiss } from "./hooks/use-swipe-dismiss"
 export type { SwipeDirection } from "./hooks/use-swipe-dismiss"

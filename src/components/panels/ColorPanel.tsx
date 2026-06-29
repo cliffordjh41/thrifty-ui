@@ -162,7 +162,7 @@ const HUE_ROW_HEX: string[] = HUES.map(({ h }) => {
 interface ColorPanelProps {
   theme: Theme
   onThemeChange: (theme: Theme) => void
-  colorMode: ThemeMode
+  mode: ThemeMode
   className?: string
   /** Render the built-in Copy-CSS footer. Default true; a host that
    * surfaces its own copy control (e.g. in a column header) sets false. */
@@ -172,7 +172,7 @@ interface ColorPanelProps {
 export function ColorPanel({
   theme,
   onThemeChange,
-  colorMode,
+  mode,
   className,
   showCopyCss = true,
 }: ColorPanelProps) {
@@ -222,7 +222,7 @@ export function ColorPanel({
     }
   }
 
-  const colors = colorMode === "B" ? theme.colorsB : theme.colorsA
+  const colors = mode === "B" ? theme.colorsB : theme.colorsA
   const activeColor = colors[activeVariable]
   const activeLabel =
     THEME_VARIABLES.find(
@@ -238,7 +238,7 @@ export function ColorPanel({
   const usingNeutral = neutralMatch !== -1
 
   const setColorFor = (key: ThemeColorKey, color: string) => {
-    if (colorMode === "B") {
+    if (mode === "B") {
       commit({ ...theme, colorsB: { ...theme.colorsB, [key]: color } })
     } else {
       commit({ ...theme, colorsA: { ...theme.colorsA, [key]: color } })
@@ -249,7 +249,7 @@ export function ColorPanel({
 
   const resetActive = () => {
     const defaults =
-      colorMode === "B" ? DEFAULT_THEME.colorsB : DEFAULT_THEME.colorsA
+      mode === "B" ? DEFAULT_THEME.colorsB : DEFAULT_THEME.colorsA
     setColorFor(activeVariable, defaults[activeVariable])
   }
 

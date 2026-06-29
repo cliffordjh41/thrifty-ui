@@ -71,7 +71,7 @@ type SheetContentProps = ComponentProps<typeof SheetPrimitive.Content> & {
   showCloseButton?: boolean;
   // Render the dimming overlay layer. Modal-style sheets keep this
   // true (default) to focus attention. Casual / non-blocking sheets
-  // (the cliffordjh mobile sheets use modal={false}) pass false so
+  // (a non-modal mobile sheet with `modal={false}`) pass false so
   // the page behind stays fully visible.
   showOverlay?: boolean;
 };

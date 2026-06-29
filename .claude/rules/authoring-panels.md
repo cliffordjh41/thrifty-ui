@@ -20,7 +20,10 @@ knowing which host it's in**. Honor it:
 - **Never** branch on `useIsMobile`, write media queries, or fork layout
   *inside* a panel for desktop vs mobile. Portability comes from the primitive,
   not from per-host code. If you're reaching for `isMobile` in a panel, stop —
-  the host handles it.
+  the host handles it. The same holds for **primitives**: a primitive does one
+  thing and doesn't fork on viewport; the consumer composes per breakpoint
+  (e.g. `ColumnToolBar` on desktop, `BottomBar` on mobile) — it doesn't get
+  fused into one component behind an `isMobile` flag.
 - Pass **memoized** chrome nodes (`useMemo` with real deps) so the hoist effect
   only re-pushes on real changes; hosts pass stable setters so it can't loop.
 

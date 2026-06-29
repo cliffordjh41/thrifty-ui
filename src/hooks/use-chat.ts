@@ -30,7 +30,18 @@ function save(messages: Message[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
 }
 
-export function useChat() {
+export interface UseChatOptions {
+  /** Canned assistant replies for the demo (no real model is wired). The
+   *  consumer supplies its own; pass a stable (module-level) array so the
+   *  send handler's identity stays stable. Falls back to a generic notice. */
+  demoResponses?: string[]
+}
+
+export function useChat(options?: UseChatOptions) {
+  const demoResponses =
+    options?.demoResponses && options.demoResponses.length > 0
+      ? options.demoResponses
+      : DEMO_RESPONSES
   const [messages, setMessages] = useState<Message[]>(load)
   const [inputValue, setInputValue] = useState("")
   const [isTyping, setIsTyping] = useState(false)
@@ -66,7 +77,7 @@ export function useChat() {
 
     // Simulate assistant response after a short delay
     setIsTyping(true)
-    const response = DEMO_RESPONSES[Math.floor(Math.random() * DEMO_RESPONSES.length)]
+    const response = demoResponses[Math.floor(Math.random() * demoResponses.length)]
     const assistantMessage: Message = {
       id: generateId(),
       role: "assistant",
@@ -96,7 +107,7 @@ export function useChat() {
       }
       typeChar()
     }, 600)
-  }, [inputValue, isTyping, messages, persist])
+  }, [inputValue, isTyping, messages, persist, demoResponses])
 
   const clearMessages = useCallback(() => {
     if (typingRef.current) clearTimeout(typingRef.current)

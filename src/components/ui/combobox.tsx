@@ -132,7 +132,6 @@ function ComboboxTrigger({
       <button
         type="button"
         role="combobox"
-        aria-expanded={undefined}
         className={cx(TRIGGER_BASE, className)}
         {...props}
       >

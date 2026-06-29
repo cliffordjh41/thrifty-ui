@@ -47,6 +47,8 @@ interface DrawerProps {
   side?: DrawerSide
   children: ReactNode
   className?: string
+  /** Accessible name for the drawer region. */
+  label?: string
   /** Enable pointer-driven swipe-to-close. Default false (preserves
    * existing button-toggled behaviour for callers that don't opt in). */
   swipeToDismiss?: boolean
@@ -62,6 +64,7 @@ export function Drawer({
   side = "bottom",
   children,
   className,
+  label,
   swipeToDismiss = false,
   onDismiss,
   showHandle = true,
@@ -81,8 +84,16 @@ export function Drawer({
         : `translateX(${offset * sign}px)`
       : undefined
 
+  // When closed the drawer is only translated offscreen — still in the DOM.
+  // `inert` + `aria-hidden` keep its content out of the tab order and the
+  // accessibility tree until it's open, so keyboard/SR users can't land in a
+  // hidden panel.
   return (
     <div
+      role="region"
+      aria-label={label}
+      aria-hidden={open ? undefined : true}
+      inert={open ? undefined : true}
       className={cx(
         "absolute inset-0 bg-background border-line flex flex-col",
         isDragging ? "" : "transition-transform duration-200 ease-out",

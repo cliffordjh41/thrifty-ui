@@ -1,7 +1,6 @@
 {
   "name": "thrifty-ui",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.2.0",
   "type": "module",
   "description": "A Radix + Tailwind React UI foundation built around usePanelChrome (one panel, four hosts) — primitives, a slidable-column shell, a theming picker, and a Claude Code authoring stack.",
   "license": "MIT",
