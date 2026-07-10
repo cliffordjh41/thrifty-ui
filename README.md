@@ -13,7 +13,7 @@ It's deliberately small. The point isn't breadth; it's a clean base you extend.
 - Ships as **source** (TypeScript/TSX) — your bundler + Tailwind compile it, so
   utility classes and theme tokens resolve in your app with no extra step.
 
-> Status: `0.1.0`, first release. Expect a focused surface, not a kitchen sink.
+> Status: `0.2.0`. Expect a focused surface, not a kitchen sink.
 
 ## The idea: one panel, four hosts
 
